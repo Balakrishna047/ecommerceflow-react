@@ -1,106 +1,93 @@
-import {Component} from 'react'
-import Cookies from 'js-cookie'
-// Import the specific loader you need
-import {ThreeDots} from 'react-loader-spinner'
+import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
+import { ThreeDots } from 'react-loader-spinner';
 
-import ProductCard from '../ProductCard'
-import './index.css'
+import ProductCard from '../ProductCard';
+import './index.css';
 
 const apiStatusConstants = {
   initial: 'INITIAL',
   success: 'SUCCESS',
   failure: 'FAILURE',
   inProgress: 'IN_PROGRESS',
-}
+};
 
-class PrimeDealsSection extends Component {
-  state = {
-    primeDeals: [],
-    apiStatus: apiStatusConstants.initial,
-  }
+const PrimeDealsSection = () => {
+  const [primeDeals, setPrimeDeals] = useState([]);
+  const [apiStatus, setApiStatus] = useState(apiStatusConstants.initial);
 
-  componentDidMount() {
-    this.getPrimeDeals()
-  }
+  useEffect(() => {
+    getPrimeDeals();
+  }, []);
 
-  getPrimeDeals = async () => {
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
+  const getPrimeDeals = async () => {
+    setApiStatus(apiStatusConstants.inProgress);
 
-    const jwtToken = Cookies.get('jwt_token')
-
-    const apiUrl = 'https://apis.ccbp.in/prime-deals'
+    const jwtToken = Cookies.get('jwt_token');
+    const apiUrl = 'https://apis.ccbp.in/prime-deals';
     const options = {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
       },
       method: 'GET',
-    }
-    const response = await fetch(apiUrl, options)
-    if (response.ok === true) {
-      const fetchedData = await response.json()
-      const updatedData = fetchedData.prime_deals.map(product => ({
+    };
+    const response = await fetch(apiUrl, options);
+    if (response.ok) {
+      const fetchedData = await response.json();
+      const updatedData = fetchedData.prime_deals.map((product) => ({
         title: product.title,
         brand: product.brand,
         price: product.price,
         id: product.id,
         imageUrl: product.image_url,
         rating: product.rating,
-      }))
-      this.setState({
-        primeDeals: updatedData,
-        apiStatus: apiStatusConstants.success,
-      })
+      }));
+      setPrimeDeals(updatedData);
+      setApiStatus(apiStatusConstants.success);
     } else if (response.status === 401) {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
+      setApiStatus(apiStatusConstants.failure);
     }
-  }
+  };
 
-  renderPrimeDealsListView = () => {
-    const {primeDeals} = this.state
-    return (
-      <div>
-        <h1 className="primedeals-list-heading">Exclusive Prime Deals</h1>
-        <ul className="products-list">
-          {primeDeals.map(product => (
-            <ProductCard productData={product} key={product.id} />
-          ))}
-        </ul>
-      </div>
-    )
-  }
+  const renderPrimeDealsListView = () => (
+    <div>
+      <h1 className="primedeals-list-heading">Exclusive Prime Deals</h1>
+      <ul className="products-list">
+        {primeDeals.map((product) => (
+          <ProductCard productData={product} key={product.id} />
+        ))}
+      </ul>
+    </div>
+  );
 
-  renderPrimeDealsFailureView = () => (
+  const renderPrimeDealsFailureView = () => (
     <img
       src="https://assets.ccbp.in/frontend/react-js/exclusive-deals-banner-img.png"
       alt="Register Prime"
       className="register-prime-image"
     />
-  )
+  );
 
-  renderLoadingView = () => (
+  const renderLoadingView = () => (
     <div className="primedeals-loader-container">
-      {/* Use the specific loader component */}
       <ThreeDots color="#0b69ff" height={50} width={50} />
     </div>
-  )
+  );
 
-  render() {
-    const {apiStatus} = this.state
+  const renderPrimeDeals = () => {
     switch (apiStatus) {
       case apiStatusConstants.success:
-        return this.renderPrimeDealsListView()
+        return renderPrimeDealsListView();
       case apiStatusConstants.failure:
-        return this.renderPrimeDealsFailureView()
+        return renderPrimeDealsFailureView();
       case apiStatusConstants.inProgress:
-        return this.renderLoadingView()
+        return renderLoadingView();
       default:
-        return null
+        return null;
     }
-  }
-}
+  };
 
-export default PrimeDealsSection
+  return <div>{renderPrimeDeals()}</div>;
+};
+
+export default PrimeDealsSection;
